@@ -33,7 +33,7 @@ DWORD GetFileProc(int nCurrentPos, SOCKET client, std::string filePath)
         int nChunkCount = 0; //文件块数
         if (nCurrentPos != 0)
         {
-            file.Seek(nCurrentPos * CHUNK_SIZE, CFile::begin); //文件指针移至断点处
+            file.Seek((long long)nCurrentPos * CHUNK_SIZE, CFile::begin); //文件指针移至断点处
             std::cout << "找到该文件 " << nCurrentPos * CHUNK_SIZE << "\n";
         }
         int FileLen = file.GetLength();

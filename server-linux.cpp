@@ -13,13 +13,13 @@ unsigned long GetFileProc(int nCurrentPos, int client, std::string FilePath)
         int nChunkCount = 0; //文件块数
         fseek(file, 0, SEEK_END);
         int FileLen = ftell(file);
-        fseek(file, nCurrentPos * CHUNK_SIZE, 0);
+        fseek(file, (long long)nCurrentPos * CHUNK_SIZE, 0);
         if (nCurrentPos != 0)
         {
             //fseek(file, nCurrentPos * CHUNK_SIZE, 0);
             std::cout << "WE GOT THE FILE " << nCurrentPos * CHUNK_SIZE << "\n";
         }
-        FileLen -= nCurrentPos * CHUNK_SIZE;
+        //FileLen -= nCurrentPos * CHUNK_SIZE;
         nChunkCount = (FileLen + CHUNK_SIZE - 1) / CHUNK_SIZE; //文件块数
 
         send(client, (char*)&FileLen, sizeof(FileLen), 0); //发送文件长度
