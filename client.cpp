@@ -115,14 +115,13 @@ int main(int argc, char* argv[])
 		if (recv(c_Socket, (char*)&FileLen, sizeof(FileLen), 0) != 0)
 		{
 			
-			int nChunkCount;
+			int nChunkCount = (FileLen + CHUNK_SIZE - 1) / CHUNK_SIZE;
 			CFile file;
 
-			nChunkCount = (FileLen + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
 			if (file.Open((LPCTSTR)FilePath, OpenFlags))
 			{
-				file.Seek(nCurrentPos * CHUNK_SIZE, CFile::begin);
+				file.Seek((long long)nCurrentPos * CHUNK_SIZE, CFile::begin);
 				char* date = new char[CHUNK_SIZE];
 				for (int i = nCurrentPos; i < nChunkCount; i++)
 				{
@@ -157,6 +156,8 @@ int main(int argc, char* argv[])
 				file.Close();
 				delete[] date;
 			}
+
+
 			if (DeleteFile((LPCTSTR)TMPFile) != 0)
 			{
 				std::cout << "文件传输完成"<<std::endl;

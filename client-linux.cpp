@@ -33,81 +33,85 @@ int main(int argc, char* argv[])
     int nCurrentPos = 0;
     std::string tmp = argv[1];
     tmp += "/abc.zip";
-    FILE* fp = fopen(tmp.c_str(), "wb");
-    if (fp == NULL) strerr("can not create file");
-    else
-    {
+
         FILE* tfp = fopen("PosFile.temp", "rb");
         if (tfp != NULL)
         {
-            std::cout << "yes" << std::endl;
             fread((char*)&nCurrentPos, sizeof(nCurrentPos), 1, tfp);
-
-            nCurrentPos++;
+            nCurrentPos &= 0;
             fclose(tfp);
             send(sockfd, (char*)&nCurrentPos, sizeof(nCurrentPos), 0);
-            std::cout << "yes" << std::endl;
         }
         else
         {
             send(sockfd, (char*)&nCurrentPos, sizeof(nCurrentPos), 0);
         }
+        
+
 
         if (recv(sockfd, (char*)&FileLen, sizeof(FileLen), 0) != 0)
         {
-            std::cout << FileLen << std::endl;
-            int nChunkCount;
+            int nChunkCount = (FileLen + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
-            nChunkCount = (FileLen + CHUNK_SIZE - 1) / CHUNK_SIZE;
-            fseek(fp, nCurrentPos * CHUNK_SIZE, SEEK_SET);
-            char* date = new char[CHUNK_SIZE];
-            for (int i = nCurrentPos; i < nChunkCount; i++)
+            FILE* fp = fopen(tmp.c_str(), "wb");
+            if (fp == NULL) strerr("can not create file");
+            else
             {
-                int nLeft;
-                if (i + 1 == nChunkCount) nLeft = FileLen - CHUNK_SIZE * (nChunkCount - 1);
-                else nLeft = CHUNK_SIZE;
-                int idx = 0;
-                while (nLeft > 0)
+                fseek(fp, (long long)nCurrentPos * CHUNK_SIZE, 0);
+                char* date = new char[CHUNK_SIZE];
+                for (int i = nCurrentPos; i < nChunkCount; i++)
                 {
-                    int ret = recv(sockfd, &date[idx], nLeft, 0);
-                    if (ret == -1)
+                    int nLeft;
+                    if (i + 1 == nChunkCount) 
+                        nLeft = FileLen - CHUNK_SIZE * (nChunkCount - 1);
+                    else 
+                        nLeft = CHUNK_SIZE;
+                    int idx = 0;
+                    while (nLeft > 0)
                     {
-                        printf("file trans error");
-                        return 0;
+                        int ret = recv(sockfd, &date[idx], nLeft, 0);
+                        if (ret == -1)
+                        {
+                            printf("file trans error");
+                            return 0;
+                        }
+                        idx += ret;
+                        nLeft -= ret;
                     }
-                    idx += ret;
-                    nLeft -= ret;
-                }
-                if (fwrite(date, sizeof(char), idx, fp) < idx)
-                    strerr("fwrite error");
+                    if (fwrite(date, sizeof(char), idx, fp) < idx)
+                        strerr("fwrite error");
 
 
-                FILE* PosFile = fopen("PosFile.temp", "wb"); //将断点写入PosFile.temp文件
-                int seekpos = i + 1;
-                if (PosFile != NULL);
-                {
-                    int tlenth = strlen((char*)&seekpos);
-                    fwrite((char*)&seekpos, sizeof(char), tlenth, PosFile);
-                    fclose(PosFile);
+                    FILE* PosFile = fopen("PosFile.temp", "wb"); //将断点写入PosFile.temp文件
+                    int seekpos = i + 1;
+                    if (PosFile != NULL);
+                    {
+                        int tlenth = strlen((char*)&seekpos);
+                        fwrite((char*)&seekpos, sizeof(char), tlenth + 1, PosFile);
+                        fclose(PosFile);
+                    }
+                
                 }
+                fclose(fp);
+                delete[] date;
             }
-            fclose(fp);
-            delete[] date;
+            remove("PosFile.temp");
+
+            std::string command = "unzip -O CP936 -o -d ";
+            command += argv[1];
+            command += " ";
+            command += argv[1]; 
+            command += "/abc.zip";
+            std::cout << command << std::endl;
+            system(command.c_str());
+
+
+
+            printf("FILE TRANS SUCCESSFULLY!\n");
         }
-        remove("PosFile.temp");
-
-        std::string command = "unzip -O CP936 -o -d ";
-        command += argv[1];
-        command += " ";
-        command += argv[1]; 
-        command += "/abc.zip";
-        std::cout << command << std::endl;
-        system(command.c_str());
 
 
 
-        printf("FILE TRANS SUCCESSFULLY!\n");
-    }
     close(sockfd);
     return 0;
 }
