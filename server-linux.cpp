@@ -4,15 +4,15 @@
 
 
 
-unsigned long GetFileProc(int nCurrentPos, int client, std::string FilePath)
+unsigned long GetFileProc(long long nCurrentPos, int client, std::string FilePath)
 {
     FILE *file = fopen(FilePath.c_str(), "rb");
 
     if (file != NULL)
     {
-        int nChunkCount = 0; //文件块数
+        long long nChunkCount = 0; //文件块数
         fseek(file, 0, SEEK_END);
-        int FileLen = ftell(file);
+        long long FileLen = ftell(file);
         fseek(file, (long long)nCurrentPos * CHUNK_SIZE, 0);
         if (nCurrentPos != 0)
         {
@@ -26,18 +26,18 @@ unsigned long GetFileProc(int nCurrentPos, int client, std::string FilePath)
         char* date = new char[CHUNK_SIZE];
 
         bool error = 0;
-        for (int i = nCurrentPos; i < nChunkCount && !error; i++) //从断点处分块发送
+        for (long long i = nCurrentPos; i < nChunkCount && !error; i++) //从断点处分块发送
         {
-            int nLength;
+            long long nLength;
             if (i + 1 == nChunkCount) nLength = FileLen - CHUNK_SIZE * (nChunkCount - 1);
             else nLength = CHUNK_SIZE;
             
-            int index = 0;
+            long long index = 0;
             
             fread(date, sizeof(char), CHUNK_SIZE, file);
             while (nLength > 0)
             {
-                int ret = send(client, &date[index], nLength, 0);
+                long long ret = send(client, &date[index], nLength, 0);
                 if (ret == -1)
                 {
                     std::cout << "DATA TRANS ERROR \n";
@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 {
     if (argc != 4)
     {
-        printf("please check your input\n", argv[0]);
+        printf("please check your input\n");
         exit(1);
     }
     char* IP = argv[2];
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 
     bool solo_file = false;
 
-    for (int i = 0; i < FilePath.length(); i++)
+    for (long long i = 0; i < FilePath.length(); i++)
     {
         if (FilePath[i] == '.')
         {
@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
         if (c_sockfd == -1) strerr("accept error");
 
 
-        int nCurrentPos = 0;//接受断点值
+        long long nCurrentPos = 0;//接受断点值
         if (recv(c_sockfd, (char*)&nCurrentPos, sizeof(nCurrentPos), 0) == -1)
         {
             printf("client failed to get the data");
