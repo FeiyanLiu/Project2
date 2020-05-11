@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
     //FilePath = ZIP(FilePath);
 
 
-    CString strRarPath = "\"WinRAR\\WinRAR.exe\" a -k -r -s ";
+    CString strRarPath = "\"WinRAR\\WinRAR.exe\" a -k -r -s -o+ -ep1 ";
     CString strfinal = strRarPath  + "abc.zip " + FilePath ;
     //printf("%s\n", strfinal);
     system(strfinal);
